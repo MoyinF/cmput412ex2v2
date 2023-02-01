@@ -18,7 +18,6 @@ roslaunch my_package multiple_nodes.launch veh:=$VEHICLE_NAME
 
 
 
-
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE
 
