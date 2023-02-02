@@ -13,7 +13,7 @@ dt-launchfile-init
 # NOTE: Use `dt-exec COMMAND` to run the main process (blocking process)
 
 # launching app
-roslaunch odometry_package node.launch veh:=$VEHICLE_NAME
+roslaunch demo_package node.launch veh:=$VEHICLE_NAME
 
 
 
