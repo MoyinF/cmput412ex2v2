@@ -26,7 +26,7 @@ class ControllerNode(DTROS):
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
         
         # LED Colors
-        self.forward_speed = 0.5
+        self.x_speed = 0.5
         self.turn_speed = 0.1
         
         # wheel distances
@@ -36,57 +36,59 @@ class ControllerNode(DTROS):
     
 
     def run(self):
-        self.move_x(1.25, 1)
-        self.move_x(1.25, -1)
-        #self.state_1()
-        #self.state_2()
-        #self.state_3()
-        #self.state_1()
-        #self.complete()
-        return
-            
-    def state_1(self):
-        #self.publish_leds("RED")
-        #self.stop()
-        #rospy.sleep(5)
-        pass
+        self.prime_bot()
         
-    def state_2(self):
-        #self.publish_leds("GREEN")
-        #self.right_turn(0.5)
-        #self.forward(5.25)
-        #self.left_turn(0.5)
-        #self.forward(1.25)
-        pass
-    
-    def state_3(self):
-        #self.publish_leds("BLUE")
-        #self.right_turn(0.5)
-        #self.forward(1.25)
-        #self.right_turn(0.5)
-        #self.forward(1.25)
-        #self.right_turn(0.5)
-        pass
+        self.forward(1.25)
+        self.backward(1.25)
+        
+        return
+
+    def prime_bot(self):
+        self.right_turn(0.5)
+        self.forward(0.5)
+        self.left_turn(0.5)
+        self.backward(0.5)
+        self.right_turn(0.5)
+        self.stop()
+        rospy.sleep(10)
         
     def complete(self):
         self.publish_leds("WHITE")
         
-    def move_x(self, total_distance, direction):
+    def forward(self, total_distance):
         starting_distance = (self.distance_left + self.distance_right) / 2
         current_distance = starting_distance
         
         msg = WheelsCmdStamped()
         msg.header.stamp = rospy.get_rostime()
-        msg.vel_left = direction * self.forward_speed
-        msg.vel_right = direction * self.forward_speed
+        msg.vel_left = self.x_speed
+        msg.vel_right = self.x_speed
+	    
+        rospy.loginfo("left:" + str(msg.vel_left) + " right: " + str(msg.vel_right))
         self.pub_wheel_commands.publish(msg)
         
         while current_distance - starting_distance < total_distance:
             current_distance = (self.distance_left + self.distance_right) / 2
             
-        # rospy.sleep(time)
         self.stop()
-
+        
+    def backward(self, total_distance):
+        starting_distance = (self.distance_left + self.distance_right) / 2
+        current_distance = starting_distance
+        
+        msg = WheelsCmdStamped()
+        msg.header.stamp = rospy.get_rostime()
+        msg.vel_left = -self.x_speed
+        msg.vel_right = -self.x_speed
+	    
+        rospy.loginfo("left:" + str(msg.vel_left) + " right: " + str(msg.vel_right))
+        self.pub_wheel_commands.publish(msg)
+        
+        while starting_distance - current_distance < total_distance:
+            current_distance = (self.distance_left + self.distance_right) / 2
+            
+        self.stop()
+        
     def left_turn(self,time):
         msg = WheelsCmdStamped()
         msg.header.stamp = rospy.get_rostime()
