@@ -26,12 +26,15 @@ class ControllerNode(DTROS):
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
         
         # LED Colors
-        self.x_speed = 0.5
+        self.x_speed = 0.25
         self.turn_speed = 0.1
         
         # wheel distances
         self.distance_left = 0
         self.distance_right = 0
+        
+        self.l = 0.045 # meters between the center of the wheel and the robot rotation
+        self.r = 0.04	# radius of the wheel in meteres
 
     
 
@@ -89,6 +92,7 @@ class ControllerNode(DTROS):
             
         self.stop()
         
+    """
     def left_turn(self,time):
         msg = WheelsCmdStamped()
         msg.header.stamp = rospy.get_rostime()
@@ -104,6 +108,43 @@ class ControllerNode(DTROS):
         msg.vel_right = -self.turn_speed
         self.pub_wheel_commands.publish(msg)
         rospy.sleep(time)
+     """
+     def rot_dist(self, angle):
+        return angle * self.l
+     
+     def left_turn(self, total_distance):
+        total_distance = rot_dist(angle)
+        starting_distance = (self.distance_left + self.distance_right) / 2
+        current_distance = starting_distance
+        
+        msg = WheelsCmdStamped()
+        msg.header.stamp = rospy.get_rostime()
+        
+        msg.vel_left = -self.turn_speed
+        msg.vel_right = self.turn_speed
+        
+        self.pub_wheel_commands.publish(msg)
+        while starting_distance - current_distance < total_distance:
+            current_distance = (abs(self.distance_left) + abs(self.distance_right)) / 2
+            
+        self.stop()
+        
+    def right_turn(self, angle):
+        total_distance = rot_dist(angle)
+        starting_distance = (self.distance_left + self.distance_right) / 2
+        current_distance = starting_distance
+        
+        msg = WheelsCmdStamped()
+        msg.header.stamp = rospy.get_rostime()
+        
+        msg.vel_left = self.turn_speed
+        msg.vel_right = -self.turn_speed
+        
+        self.pub_wheel_commands.publish(msg)
+        while starting_distance - current_distance < total_distance:
+            current_distance = (abs(self.distance_left) + abs(self.distance_right)) / 2
+        
+        self.stop()
 
     def stop(self):
         msg = WheelsCmdStamped()

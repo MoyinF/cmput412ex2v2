@@ -90,6 +90,7 @@ class OdometryNode(DTROS):
         # Compute total distance traveled by the right wheel
         elif wheel == 'right':
             rel_ticks = ticks - self.initial_right
+            rospy.loginfo("ticks " + str(ticks))
             diff_ticks = np.abs(rel_ticks - self.prev_right)
             dist = (2 * np.pi * self._radius * diff_ticks / resolution)
             
