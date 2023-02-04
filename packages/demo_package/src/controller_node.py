@@ -22,12 +22,12 @@ class ControllerNode(DTROS):
         self.pub_wheel_commands = rospy.Publisher(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=1)
         
         # Services
-        rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
+        #rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
         
         # vehicle speeds
         self.x_speed = 0.25
-        self.turn_speed = 0.1
+        self.turn_speed = 0.25
         
         # wheel distances
         self.distance_left = 0
@@ -39,20 +39,12 @@ class ControllerNode(DTROS):
     
 
     def run(self):
-        self.prime_bot()
-        
-        self.forward(1.25)
-        self.backward(1.25)
-        
-        return
-
-    def prime_bot(self):
+        rospy.loginfo("Duckiebot driving forward")
+        self.forward(0.3)
+        rospy.loginfo("Duckiebot turning right")
         self.right_turn(np.pi/2)
-        self.left_turn(np.pi/2)
-        self.right_turn(np.pi/2)
-        self.left_turn(np.pi/2)
-        self.stop()
-        rospy.sleep(10)
+        rospy.loginfo("Duckiebot driving backwards")
+        self.backward(0.3)
         
     def complete(self):
         self.publish_leds("WHITE")
@@ -109,7 +101,7 @@ class ControllerNode(DTROS):
             current_distance = (abs(starting_distance_l - self.distance_left) + abs(starting_distance_r - self.distance_right))/2
             self.pub_wheel_commands.publish(msg)
             
-        #self.stop()
+        self.stop()
         
     def right_turn(self, angle):
         total_distance = self.rot_dist(angle)
@@ -146,9 +138,11 @@ class ControllerNode(DTROS):
             
     def cb_distance_left(self, msg):
         self.distance_left = msg.data
+        rospy.loginfo("Distance left: " + str(msg.data))
         
     def cb_distance_right(self, msg):
         self.distance_right = msg.data
+        rospy.loginfo("Distance right: " + str(msg.data))
 
 if __name__ == '__main__':
     # create the node
@@ -157,5 +151,4 @@ if __name__ == '__main__':
     node.run()
     # keep spinning
     rospy.spin()
-    rospy.signal_shutdown("End of program")
 

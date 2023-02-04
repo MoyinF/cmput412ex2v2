@@ -56,6 +56,11 @@ class OdometryNode(DTROS):
         self.last_dist_right = 0
         self.theta = 90
         
+        
+        # attribtues for recording position in the world frame
+        self.x_world = 0.32
+        self.y_world = 0.32
+        self.theta_world = np.pi/2
 
         self.log("Initialized")
 
@@ -93,7 +98,6 @@ class OdometryNode(DTROS):
         # Compute total distance traveled by the right wheel
         elif wheel == 'right':
             rel_ticks = ticks - self.initial_right
-            rospy.loginfo("ticks " + str(ticks))
             diff_ticks = np.abs(rel_ticks - self.prev_right)
             dist = (2 * np.pi * self._radius * diff_ticks / resolution)
             
@@ -106,8 +110,6 @@ class OdometryNode(DTROS):
             self.pub_integrated_distance_right.publish(self.right_distance)
             
             self.prev_right = rel_ticks
-            
-        # compute current rotational velocity
 
     def cb_executed_commands(self, msg):
         """ Use the executed commands to determine the direction of travel of each wheel.
@@ -115,15 +117,22 @@ class OdometryNode(DTROS):
         # retreive wheel velocities from message
         self.vel_left = msg.vel_left
         self.vel_right = msg.vel_right
-        rospy.loginfo("Executed: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
+        
+        #rospy.loginfo("Executed: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
     
     def cb_received_commands(self, msg):
-        rospy.loginfo("Sent: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
+        #rospy.loginfo("Sent: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
+        pass
         
          
     def run(self):
-        rate = rospy.Rate(1) # 1Hz
+        bag = rosbag.Bag('test.bag', 'w')
+        
+        seconds = 0.2
+        rate = rospy.Rate(seconds) # 5Hz
+        
         while not rospy.is_shutdown():
+            # capture distance moved over specific time period
             left_distance_t0 = self.left_distance
             right_distance_t0 = self.right_distance
             
@@ -131,10 +140,42 @@ class OdometryNode(DTROS):
             
             left_distance_t1 = self.left_distance
             right_distance_t1 = self.right_distance
+            
+            # calculate rotation change
+            left_distance_d = left_distance_t0 - left_distance_t1
+            right_distance_d = right_distance_t0 - right_distance_t1
+            average_distance_d = (left_distance_d + right_distance_d) / 2
+            
+            left_speed = left_distance_d / seconds	# meters per second
+            right_speed = left_distance_d / seconds	# meters per second
         
-            w_l = (self._radius * self.vel_left) / (2 * self.l)
-            w_r = (self._radius * self.vel_right) / (2 * self.l)
-            w_delta = w_r - w_l
+            left_rotation = (self._radius * left_speed) / (2 * self.l)
+            right_rotation = (self._radius * right_speed) / (2 * self.l)
+            total_rotation = right_rotation - left_rotation	# radians per second
+            
+            rospy.loginfo("rotation:" + str(total_rotation))
+            
+            # calculate position with respect to world frame
+            self.theta_world += total_rotation
+            self.y_world = sin(self.theta_world) * average_distance_d
+            self.x_world = cos(self.theta_world) * average_distance_d
+            
+            # write final position to ros bag
+            timestamp = String()
+            timestamp.data = str(rospy.get_rostime())
+            
+            x = Int32()
+            x.data = self.x_world
+            
+            y = Int32()
+            y.data = self.y_world
+            
+            bag.write("timestamp": timestamp)
+            bag.write("x": x)
+            bag.write("y": y)
+            
+        bag.close()
+            
         
 
 if __name__ == '__main__':
