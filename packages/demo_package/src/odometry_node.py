@@ -24,6 +24,9 @@ class OdometryNode(DTROS):
         self.sub_encoder_ticks_left = rospy.Subscriber(f'/{self.veh_name}/left_wheel_encoder_node/tick', WheelEncoderStamped, self.cb_encoder_data, callback_args='left')
         self.sub_encoder_ticks_right = rospy.Subscriber(f'/{self.veh_name}/right_wheel_encoder_node/tick', WheelEncoderStamped, self.cb_encoder_data, callback_args='right')
         self.sub_executed_commands = rospy.Subscriber(f'/{self.veh_name}/wheels_driver_node/wheels_cmd_executed', WheelsCmdStamped, self.cb_executed_commands)
+        
+         # Subscribing to the wheels_cmd
+        # self.sub_wheels_cmd = rospy.Subscriber(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, self.cb_received_commands)
 
         # Publishers
         self.pub_integrated_distance_left = rospy.Publisher(f'/{self.veh_name}/odometry_node/integrated_distance_left', Float32, queue_size=10)
@@ -90,7 +93,7 @@ class OdometryNode(DTROS):
         # Compute total distance traveled by the right wheel
         elif wheel == 'right':
             rel_ticks = ticks - self.initial_right
-            rospy.loginfo("ticks " + str(ticks))
+            # rospy.loginfo("ticks " + str(ticks))
             diff_ticks = np.abs(rel_ticks - self.prev_right)
             dist = (2 * np.pi * self._radius * diff_ticks / resolution)
             
@@ -112,6 +115,10 @@ class OdometryNode(DTROS):
         # retreive wheel velocities from message
         self.vel_left = msg.vel_left
         self.vel_right = msg.vel_right
+        #rospy.loginfo("Executed: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
+    
+    def cb_received_commands(self, msg):
+        rospy.loginfo("Sent: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
         
     def run(self):
         rate = rospy.Rate(1) # 1Hz

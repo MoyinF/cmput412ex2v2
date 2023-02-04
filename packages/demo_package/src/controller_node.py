@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import numpy as np
 import os
 import rospy
 from duckietown.dtros import DTROS, NodeType, TopicType
@@ -25,9 +25,12 @@ class ControllerNode(DTROS):
         rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
         
-        # LED Colors
-        self.x_speed = 0.25
-        self.turn_speed = 0.1
+        # vehicle speeds
+        self.x_speed = 0.5
+        self.turn_speed = 0.3
+        
+        # self.x_speed = 0.4
+        # self.turn_speed = 0.15
         
         # wheel distances
         self.distance_left = 0
@@ -39,25 +42,23 @@ class ControllerNode(DTROS):
     
 
     def run(self):
-        self.prime_bot()
-        
-        self.forward(1.25)
-        self.backward(1.25)
-        
-        return
-
-    def prime_bot(self):
-        self.right_turn(0.5)
-        self.forward(0.5)
-        self.left_turn(0.5)
-        self.backward(0.5)
-        self.right_turn(0.5)
         self.stop()
-        rospy.sleep(10)
+        self.right_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.right_turn(np.pi/2)
+        
+        # self.left_turn(np.pi/2)
+        # self.backward(0.3)
+        return
         
     def complete(self):
         self.publish_leds("WHITE")
         
+    
     def forward(self, total_distance):
         starting_distance = (self.distance_left + self.distance_right) / 2
         current_distance = starting_distance
@@ -66,14 +67,15 @@ class ControllerNode(DTROS):
         msg.header.stamp = rospy.get_rostime()
         msg.vel_left = self.x_speed
         msg.vel_right = self.x_speed
-	    
-        rospy.loginfo("left:" + str(msg.vel_left) + " right: " + str(msg.vel_right))
+        
         self.pub_wheel_commands.publish(msg)
         
         while current_distance - starting_distance < total_distance:
             current_distance = (self.distance_left + self.distance_right) / 2
+            self.pub_wheel_commands.publish(msg)
             
         self.stop()
+        
         
     def backward(self, total_distance):
         starting_distance = (self.distance_left + self.distance_right) / 2
@@ -89,33 +91,19 @@ class ControllerNode(DTROS):
         
         while starting_distance - current_distance < total_distance:
             current_distance = (self.distance_left + self.distance_right) / 2
+            self.pub_wheel_commands.publish(msg)
             
         self.stop()
         
-    """
-    def left_turn(self,time):
-        msg = WheelsCmdStamped()
-        msg.header.stamp = rospy.get_rostime()
-        msg.vel_left = -self.turn_speed
-        msg.vel_right = self.turn_speed
-        self.pub_wheel_commands.publish(msg)
-        rospy.sleep(time)
-
-    def right_turn(self,time):
-        msg = WheelsCmdStamped()
-        msg.header.stamp = rospy.get_rostime()
-        msg.vel_left = self.turn_speed
-        msg.vel_right = -self.turn_speed
-        self.pub_wheel_commands.publish(msg)
-        rospy.sleep(time)
-     """
-     def rot_dist(self, angle):
+    def rot_dist(self, angle):
         return angle * self.l
      
-     def left_turn(self, total_distance):
-        total_distance = rot_dist(angle)
-        starting_distance = (self.distance_left + self.distance_right) / 2
-        current_distance = starting_distance
+    def left_turn(self, angle):
+        total_distance = self.rot_dist(angle)
+
+        starting_distance_l = self.distance_left
+        starting_distance_r = self.distance_right
+        current_distance = 0
         
         msg = WheelsCmdStamped()
         msg.header.stamp = rospy.get_rostime()
@@ -123,16 +111,17 @@ class ControllerNode(DTROS):
         msg.vel_left = -self.turn_speed
         msg.vel_right = self.turn_speed
         
-        self.pub_wheel_commands.publish(msg)
-        while starting_distance - current_distance < total_distance:
-            current_distance = (abs(self.distance_left) + abs(self.distance_right)) / 2
-            
+        while current_distance < total_distance:
+            current_distance = (abs(starting_distance_l - self.distance_left) + abs(starting_distance_r - self.distance_right))/2
+            self.pub_wheel_commands.publish(msg)
         self.stop()
         
     def right_turn(self, angle):
-        total_distance = rot_dist(angle)
-        starting_distance = (self.distance_left + self.distance_right) / 2
-        current_distance = starting_distance
+        total_distance = self.rot_dist(angle)
+        
+        starting_distance_l = self.distance_left
+        starting_distance_r = self.distance_right
+        current_distance = 0
         
         msg = WheelsCmdStamped()
         msg.header.stamp = rospy.get_rostime()
@@ -140,11 +129,11 @@ class ControllerNode(DTROS):
         msg.vel_left = self.turn_speed
         msg.vel_right = -self.turn_speed
         
-        self.pub_wheel_commands.publish(msg)
-        while starting_distance - current_distance < total_distance:
-            current_distance = (abs(self.distance_left) + abs(self.distance_right)) / 2
-        
+        while current_distance < total_distance:
+            current_distance = (abs(starting_distance_l - self.distance_left) + abs(starting_distance_r - self.distance_right))/2
+            self.pub_wheel_commands.publish(msg)  
         self.stop()
+        
 
     def stop(self):
         msg = WheelsCmdStamped()
@@ -172,5 +161,4 @@ if __name__ == '__main__':
     # run node
     node.run()
     # keep spinning
-    rospy.spin()
-
+    # rospy.spin()
