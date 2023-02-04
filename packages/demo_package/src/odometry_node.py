@@ -2,9 +2,10 @@
 import numpy as np
 import os
 import rospy
+import rosbag
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
 from duckietown_msgs.msg import Twist2DStamped, WheelEncoderStamped, WheelsCmdStamped
-from std_msgs.msg import Header, Float32
+from std_msgs.msg import Header, String, Float32
 
 class OdometryNode(DTROS):
 
@@ -58,9 +59,9 @@ class OdometryNode(DTROS):
         
         
         # attribtues for recording position in the world frame
-        self.x_world = 0.32
-        self.y_world = 0.32
-        self.theta_world = np.pi/2
+        self.x_world = 0.32		# position in meteres relative to world frame
+        self.y_world = 0.32		# position in meteres relative to world frame
+        self.theta_world = np.pi/2	# position in radians relative to world frame
 
         self.log("Initialized")
 
@@ -126,7 +127,7 @@ class OdometryNode(DTROS):
         
          
     def run(self):
-        bag = rosbag.Bag('test.bag', 'w')
+        bag = rosbag.Bag('/data/bags/world_frame.bag', 'w')
         
         seconds = 0.2
         rate = rospy.Rate(seconds) # 5Hz
@@ -149,30 +150,28 @@ class OdometryNode(DTROS):
             left_speed = left_distance_d / seconds	# meters per second
             right_speed = left_distance_d / seconds	# meters per second
         
-            left_rotation = (self._radius * left_speed) / (2 * self.l)
-            right_rotation = (self._radius * right_speed) / (2 * self.l)
-            total_rotation = right_rotation - left_rotation	# radians per second
-            
-            rospy.loginfo("rotation:" + str(total_rotation))
+            left_rotation = left_distance_d / (2 * self.l)
+            right_rotation = right_distance_d / (2 * self.l)
+            total_rotation = right_rotation - left_rotation
             
             # calculate position with respect to world frame
             self.theta_world += total_rotation
-            self.y_world = sin(self.theta_world) * average_distance_d
-            self.x_world = cos(self.theta_world) * average_distance_d
+            self.y_world = np.sin(self.theta_world) * average_distance_d
+            self.x_world = np.cos(self.theta_world) * average_distance_d
             
             # write final position to ros bag
             timestamp = String()
             timestamp.data = str(rospy.get_rostime())
             
-            x = Int32()
+            x = Float32()
             x.data = self.x_world
             
-            y = Int32()
+            y = Float32()
             y.data = self.y_world
             
-            bag.write("timestamp": timestamp)
-            bag.write("x": x)
-            bag.write("y": y)
+            bag.write("timestamp", timestamp)
+            bag.write("x", x)
+            bag.write("y", y)
             
         bag.close()
             
