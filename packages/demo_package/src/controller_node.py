@@ -22,7 +22,7 @@ class ControllerNode(DTROS):
         self.pub_wheel_commands = rospy.Publisher(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=1)
         
         # Services
-        #rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
+        rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
         
         # vehicle speeds
@@ -40,11 +40,11 @@ class ControllerNode(DTROS):
 
     def run(self):
         rospy.loginfo("Duckiebot driving forward")
-        self.forward(0.3)
+        self.forward(1.0)
         rospy.loginfo("Duckiebot turning right")
         self.right_turn(np.pi/2)
         rospy.loginfo("Duckiebot driving backwards")
-        self.backward(0.3)
+        self.backward(1.0)
         
     def complete(self):
         self.publish_leds("WHITE")

@@ -5,7 +5,7 @@ import rospy
 import rosbag
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
 from duckietown_msgs.msg import Twist2DStamped, WheelEncoderStamped, WheelsCmdStamped
-from std_msgs.msg import Header, String, Float32
+from std_msgs.msg import Header, String, Float32, Int32
 
 class OdometryNode(DTROS):
 
@@ -129,8 +129,8 @@ class OdometryNode(DTROS):
     def run(self):
         bag = rosbag.Bag('/data/bags/world_frame.bag', 'w')
         
-        seconds = 0.2
-        rate = rospy.Rate(seconds) # 5Hz
+        seconds = 0.1
+        rate = rospy.Rate(seconds) # 10Hz
         
         while not rospy.is_shutdown():
             # capture distance moved over specific time period
@@ -160,8 +160,9 @@ class OdometryNode(DTROS):
             self.x_world = np.cos(self.theta_world) * average_distance_d
             
             # write final position to ros bag
-            timestamp = String()
-            timestamp.data = str(rospy.get_rostime())
+            now = rospy.get_rostime()
+            timestamp = Int32()
+            timestamp.data = now.secs
             
             x = Float32()
             x.data = self.x_world
@@ -169,12 +170,15 @@ class OdometryNode(DTROS):
             y = Float32()
             y.data = self.y_world
             
+            theta = Float32()
+            theta.data = self.theta_world
+            
             bag.write("timestamp", timestamp)
             bag.write("x", x)
             bag.write("y", y)
+            bag.write("theta", theta)
             
         bag.close()
-            
         
 
 if __name__ == '__main__':

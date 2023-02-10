@@ -15,6 +15,8 @@ dt-launchfile-init
 # launching app
 roslaunch demo_package node.launch veh:=$VEHICLE_NAME
 
+# Uncomment the following line to run the rosbag analyzer
+# dt-exec python3 -m "demo_package.src.rosbag_analyzer"
 
 
 
