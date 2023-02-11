@@ -129,8 +129,7 @@ class OdometryNode(DTROS):
     def run(self):
         bag = rosbag.Bag('/data/bags/world_frame.bag', 'w')
         
-        seconds = 0.1
-        rate = rospy.Rate(seconds) # 10Hz
+        rate = rospy.Rate(10) # 10Hz
         
         while not rospy.is_shutdown():
             # capture distance moved over specific time period
@@ -146,9 +145,6 @@ class OdometryNode(DTROS):
             left_distance_d = left_distance_t0 - left_distance_t1
             right_distance_d = right_distance_t0 - right_distance_t1
             average_distance_d = (left_distance_d + right_distance_d) / 2
-            
-            left_speed = left_distance_d / seconds	# meters per second
-            right_speed = left_distance_d / seconds	# meters per second
         
             left_rotation = left_distance_d / (2 * self.l)
             right_rotation = right_distance_d / (2 * self.l)
@@ -156,8 +152,8 @@ class OdometryNode(DTROS):
             
             # calculate position with respect to world frame
             self.theta_world += total_rotation
-            self.y_world = np.sin(self.theta_world) * average_distance_d
-            self.x_world = np.cos(self.theta_world) * average_distance_d
+            self.y_world += np.sin(self.theta_world) * average_distance_d
+            self.x_world += np.cos(self.theta_world) * average_distance_d
             
             # write final position to ros bag
             now = rospy.get_rostime()
