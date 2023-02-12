@@ -29,43 +29,35 @@ class OdometryNode(DTROS):
         # Subscribing to the wheels_cmd
         self.sub_wheels_cmd = rospy.Subscriber(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, self.cb_received_commands)
 
-         # Subscribing to the wheels_cmd
-        # self.sub_wheels_cmd = rospy.Subscriber(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, self.cb_received_commands)
-
         # Publishers
         self.pub_integrated_distance_left = rospy.Publisher(f'/{self.veh_name}/odometry_node/integrated_distance_left', Float32, queue_size=10)
         self.pub_integrated_distance_right = rospy.Publisher(f'/{self.veh_name}/odometry_node/integrated_distance_right', Float32, queue_size=10)
         self.pub_rotational_vel = rospy.Publisher(f'/{self.veh_name}/odometry_node/rotational_vel', Float32, queue_size=10)
-
+        
         # attributes for computing wheel distance
         self.prev_left = 0	# number of ticks on left wheel at last computation time
         self.prev_right = 0	# number of ticks on right wheel at last computation time
-
+        
         self.first_message_left = True	# set to false after first computation
         self.first_message_right = True	# set to false after first computation
         self.initial_left = 0	# the number of ticks on left wheel at first computation
         self.initial_right = 0 # the number of ticks on right wheel at first computation
-
+        
         self.left_distance = 0	# total distance traveled by left wheel in meters
         self.right_distance = 0	# total distance traveled by right wheel in meters
-
+        
         self.vel_left = 0	# the velocity of left wheel in the range [-1.0, 1.0]
         self.vel_right = 0	# the velocity of right wheel in the range [-1.0, 1.0]
-
+        
         # attribtues for computing rotational velocity
         # speed of wheels
         self.l = 0.045 # meters between the center of the wheel and the robot rotation
-        self.r = 0.033	# radius of the wheel in meteres
+        self.r = 0.04	# radius of the wheel in meteres
         self.last_dist_left = 0
         self.last_dist_right = 0
         self.theta = 90
-<<<<<<< HEAD
-        # self.theta = np.pi/2
-
-=======
         
         
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
         # attribtues for recording position in the world frame
         self.x_world = 0.32		# position in meteres relative to world frame
         self.y_world = 0.32		# position in meteres relative to world frame
@@ -79,7 +71,7 @@ class OdometryNode(DTROS):
         # retreive ticks and resolution from message
         ticks = msg.data
         resolution = msg.resolution
-
+        
         # Check if it's the first received message and store initial encoder value
         if wheel == 'left' and self.first_message_left == True:
             self.first_message_left = False
@@ -87,47 +79,38 @@ class OdometryNode(DTROS):
         if wheel == 'right' and self.first_message_right ==True:
             self.first_message_right = False
             self.initial_right = ticks
-
+        
         # Compute total distance traveled by the left wheel
         if wheel == 'left':
             rel_ticks = ticks - self.initial_left
             diff_ticks = np.abs(rel_ticks - self.prev_left)
             dist = (2 * np.pi * self._radius * diff_ticks / resolution)
-
+            
             # Accumulate distance and publish it
             if self.vel_left >= 0:
             	self.left_distance += dist
             else:
                 self.left_distance -= dist
-
+                
             self.pub_integrated_distance_left.publish(self.left_distance)
-
+            
             self.prev_left = rel_ticks
 
         # Compute total distance traveled by the right wheel
         elif wheel == 'right':
             rel_ticks = ticks - self.initial_right
-<<<<<<< HEAD
-            # rospy.loginfo("ticks " + str(ticks))
-=======
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
             diff_ticks = np.abs(rel_ticks - self.prev_right)
             dist = (2 * np.pi * self._radius * diff_ticks / resolution)
-
+            
             # Accumulate distance and publish it
             if self.vel_right >= 0:
             	self.right_distance += dist
             else:
                 self.right_distance -= dist
-
+                
             self.pub_integrated_distance_right.publish(self.right_distance)
-
+            
             self.prev_right = rel_ticks
-<<<<<<< HEAD
-
-        # compute current rotational velocity
-=======
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
 
     def cb_executed_commands(self, msg):
         """ Use the executed commands to determine the direction of travel of each wheel.
@@ -135,13 +118,6 @@ class OdometryNode(DTROS):
         # retreive wheel velocities from message
         self.vel_left = msg.vel_left
         self.vel_right = msg.vel_right
-<<<<<<< HEAD
-        #rospy.loginfo("Executed: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
-
-    def cb_received_commands(self, msg):
-        rospy.loginfo("Sent: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
-
-=======
         
         #rospy.loginfo("Executed: left wheel: "+ str(msg.vel_left) + " right wheel: "+ str(msg.vel_right))
     
@@ -150,7 +126,6 @@ class OdometryNode(DTROS):
         pass
         
          
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
     def run(self):
         bag = rosbag.Bag('/data/bags/world_frame.bag', 'w')
         
@@ -160,14 +135,11 @@ class OdometryNode(DTROS):
             # capture distance moved over specific time period
             left_distance_t0 = self.left_distance
             right_distance_t0 = self.right_distance
-
+            
             rate.sleep()
-
+            
             left_distance_t1 = self.left_distance
             right_distance_t1 = self.right_distance
-<<<<<<< HEAD
-
-=======
             
             # calculate rotation change
             left_distance_d = left_distance_t1 - left_distance_t0
@@ -204,15 +176,8 @@ class OdometryNode(DTROS):
             
         bag.close()
         
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
 
 if __name__ == '__main__':
     node = OdometryNode(node_name='odometry_node')
     # Run the node
     node.run()
-<<<<<<< HEAD
-    rate = rospy.Rate(1) # 1Hz
-    # Keep it spinning to keep the node alive
-    # rospy.spin()
-=======
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
