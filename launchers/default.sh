@@ -13,8 +13,10 @@ dt-launchfile-init
 # NOTE: Use `dt-exec COMMAND` to run the main process (blocking process)
 
 # launching app
-roslaunch my_package multiple_nodes.launch veh:=$VEHICLE_NAME
+roslaunch demo_package node.launch veh:=$VEHICLE_NAME
 
+# Uncomment the following line to run the rosbag analyzer
+# dt-exec python3 -m "demo_package.src.rosbag_analyzer"
 
 
 
