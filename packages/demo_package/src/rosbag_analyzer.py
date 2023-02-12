@@ -1,10 +1,4 @@
 import rosbag
-<<<<<<< HEAD
-bag = rosbag.Bag('/data/bags/world_frame.bag')
-for topic, msg, t in bag.read_messages(topics=['timestamp', 'x', 'y']):
-    print msg
-bag.close()
-=======
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -96,6 +90,3 @@ plt.ylabel("Y (metres)")
 plt.plot(xpoints, ypoints)
 plt.savefig("/data/logs/xworld_vs_yworld.png")
 plt.clf()
-
-
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
