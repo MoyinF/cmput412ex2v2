@@ -6,7 +6,7 @@ from duckietown.dtros import DTROS, NodeType, TopicType
 from std_msgs.msg import String, Header, Float32, ColorRGBA
 from duckietown_msgs.msg import LEDPattern, WheelsCmdStamped
 from duckietown_msgs.srv import SetCustomLEDPattern, ChangePattern
-# import time
+import time
 
 class ControllerNode(DTROS):
 
@@ -29,9 +29,10 @@ class ControllerNode(DTROS):
         # vehicle speeds
         self.x_speed = 0.3
         self.turn_speed = 0.45
-        self.slow_down = 0.14 # for slowing down turns during rotations
-        self.speed_up = 0.015 # for speeding up the lagging wheel
+        self.slow_down = 0.13 # for slowing down turns during rotations
+        self.speed_up = 0.0525 # for speeding up the lagging wheel
 
+        # old speeds
         # self.x_speed = 0.4
         # self.turn_speed = 0.15
 
@@ -42,31 +43,89 @@ class ControllerNode(DTROS):
         self.l = 0.05 # meters between the center of the wheel and the robot rotation
         self.r = 0.033	# radius of the wheel in meteres
 
+        # set shutdown behaviour
+        rospy.on_shutdown(self.stop)
 
 
     def run(self):
+        # self.real_run()
+        self.test_state_4()
+
+    def real_run(self):
         self.state_1(5)
         self.state_2()
         self.state_1(5)
-        #self.state_3()
-        #self.state_1(5)
-        #self.state_4()
+        self.state_3()
+        self.state_1(5)
+        self.state_4()
         self.complete()
-        return
+
+    def test_state_4(self):
+        self.state_1(2)
+        self.publish_leds("WHITE")
+        self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
+        self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
+        self.state_1(7)
+        self.publish_leds("BLUE")
+        self.test_circular_motion(0.3, 0.5) # current normal radius, faster speed
+        self.test_circular_motion(0.3, 0.5) # current normal radius, faster speed
+        self.state_1(7)
+        self.publish_leds("GREEN")
+        self.test_circular_motion(0.3, 0.6) # current normal radius, faster speed
+        self.stop()
+        self.complete()
+
+    def test_state_2(self):
+        self.state_1(5)
+        self.slow_down = 0.13 # for slowing down turns during rotations
+        self.speed_up = 0.0525 # for speeding up the lagging wheel
+        self.publish_leds("GREEN")
+        self.first_right_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+
+        self.state_1(5)
+        self.slow_down = 0.13 # for slowing down turns during rotations
+        self.speed_up = 0.055 # for speeding up the lagging wheel
+        self.publish_leds("GREEN")
+        self.first_right_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.complete()
 
     def complete(self):
+        seconds = 0.4
+        self.publish_leds("GREEN")
+        time.sleep(seconds)
+        self.publish_leds("BLUE")
+        time.sleep(seconds)
+        self.publish_leds("RED")
+        time.sleep(seconds)
         self.publish_leds("WHITE")
+        time.sleep(seconds)
+        self.publish_leds("GREEN")
+        time.sleep(seconds)
+        self.publish_leds("BLUE")
+        time.sleep(seconds)
+        self.publish_leds("RED")
+        time.sleep(seconds)
+        self.publish_leds("WHITE")
+        time.sleep(seconds)
 
     def state_1(self, seconds):
         # change LEDs and wait for 5 seconds
         self.publish_leds("RED")
-
-        # wait for 5 seconds
-        # time.sleep(seconds)
+        time.sleep(seconds)
 
     def state_2(self):
-        self.publish_leds("BLUE")
-        # move 90 degrees and forward 3 times
+        # change LEDs, move 90 degrees and forward 3 times
+        self.publish_leds("GREEN")
         self.first_right_turn(np.pi/2)
         self.forward(1.25)
         self.left_turn(np.pi/2)
@@ -75,16 +134,17 @@ class ControllerNode(DTROS):
         self.forward(1.25)
 
     def state_3(self):
-        self.publish_leds("GREEN")
-        # return to initial position
+        # change LEDs and return to initial position
+        self.publish_leds("BLUE")
         self.right_turn(np.pi/2)
         self.backward(1.25)
         self.stop()
 
     def state_4(self):
-        self.publish_leds("WHITE")
         # change LEDs and move in circular motion
-        self.circular_motion()
+        self.publish_leds("WHITE")
+        self.forward(0.625) # move a bit forward
+        self.circular_motion(0.55)
 
 
     def forward(self, total_distance):
@@ -122,7 +182,7 @@ class ControllerNode(DTROS):
 
     def rot_dist(self, angle):
         # angle is in radians
-        # r*theta is formula for arc length
+        # r * theta is formula for arc length
         return angle * self.l
 
     def left_turn(self, angle):
@@ -185,27 +245,56 @@ class ControllerNode(DTROS):
 
     def circular_motion(self, rad):
         # for clockwise motion
-        ########### right now just a filler function
-        ######## something off with the calculations: if moving x meters, the speed is different if it were moving straight
-        ########### vs if it were moving x meters in a circle, right?
-        ######### and when do we use self.r?
-        # rad is to center of duckiebot, so need big & small radii
+        msg = WheelsCmdStamped()
+        msg.header.stamp = rospy.get_rostime()
+
+        # rad is center of rotation to center of duckiebot,
+        # so need big & small radii for each wheel
         big_distance = 2 * np.pi * (rad + self.l)
         small_distance = 2 * np.pi * (rad - self.l)
 
-        t = 30 # seconds to complete
+        t = 10 # seconds to complete
 
         starting_distance_l = self.distance_left
         starting_distance_r = self.distance_right
 
+        outer_vel = big_distance/t
+        inner_vel = small_distance/t
+
         # clockwise motion: left wheel is the outer wheel, so it needs to have the bigger distance
-        msg.vel_left = big_distance/t
-        msg.vel_right = small_distance/t
+        msg.vel_left = outer_vel
+        msg.vel_right = inner_vel
 
         while (self.distance_left - starting_distance_l < big_distance) and (self.distance_right - starting_distance_r < small_distance):
             rospy.loginfo("circular motion")
             self.pub_wheel_commands.publish(msg)
+        self.stop()
 
+    def test_circular_motion(self, rad, speed):
+        # for clockwise motion
+        msg = WheelsCmdStamped()
+        msg.header.stamp = rospy.get_rostime()
+
+        # rad is center of rotation to center of duckiebot,
+        # so need big & small radii for each wheel
+        big_distance = 2 * np.pi * (rad + self.l)
+        small_distance = 2 * np.pi * (rad - self.l)
+
+        vel_ratio = (rad + self.l) / (rad - self.l)
+
+        starting_distance_l = self.distance_left
+        starting_distance_r = self.distance_right
+
+        outer_vel = speed * vel_ratio
+        inner_vel = speed
+
+        # clockwise motion: left wheel is the outer wheel, so it needs to have the bigger distance
+        msg.vel_left = outer_vel
+        msg.vel_right = inner_vel
+
+        while (self.distance_left - starting_distance_l < big_distance) and (self.distance_right - starting_distance_r < small_distance):
+            rospy.loginfo("circular motion")
+            self.pub_wheel_commands.publish(msg)
         self.stop()
 
 

@@ -51,11 +51,16 @@ class OdometryNode(DTROS):
         # attribtues for computing rotational velocity
         # speed of wheels
         self.l = 0.045 # meters between the center of the wheel and the robot rotation
-        self.r = 0.04	# radius of the wheel in meteres
+        self.r = 0.033	# radius of the wheel in meteres
         self.last_dist_left = 0
         self.last_dist_right = 0
         self.theta = 90
+        # self.theta = np.pi/2
 
+        # attribtues for recording position in the world frame
+        self.x_world = 0.32		# position in meteres relative to world frame
+        self.y_world = 0.32		# position in meteres relative to world frame
+        self.theta_world = np.pi/2	# position in radians relative to world frame
 
         self.log("Initialized")
 
@@ -131,14 +136,11 @@ class OdometryNode(DTROS):
             left_distance_t1 = self.left_distance
             right_distance_t1 = self.right_distance
 
-        w_l = (self._radius * self.vel_left) / (2 * self.l)
-        w_r = (self._radius * self.vel_right) / (2 * self.l)
-        w_delta = w_r - w_l
-
 
 if __name__ == '__main__':
     node = OdometryNode(node_name='odometry_node')
     # Run the node
     node.run()
+    rate = rospy.Rate(1) # 1Hz
     # Keep it spinning to keep the node alive
     # rospy.spin()
