@@ -22,7 +22,7 @@ class ControllerNode(DTROS):
         self.pub_wheel_commands = rospy.Publisher(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=1)
         
         # Services
-        rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
+        # rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
         
         # vehicle speeds
@@ -120,7 +120,7 @@ class ControllerNode(DTROS):
             current_distance = (abs(starting_distance_l - self.distance_left) + abs(starting_distance_r - self.distance_right))/2
             self.pub_wheel_commands.publish(msg)
         
-        #self.stop()
+        self.stop()
 
     def stop(self):
         msg = WheelsCmdStamped()
@@ -149,6 +149,4 @@ if __name__ == '__main__':
     node = ControllerNode(node_name='controller_node')
     # run node
     node.run()
-    # keep spinning
-    rospy.spin()
 

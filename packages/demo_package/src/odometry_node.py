@@ -142,8 +142,8 @@ class OdometryNode(DTROS):
             right_distance_t1 = self.right_distance
             
             # calculate rotation change
-            left_distance_d = left_distance_t0 - left_distance_t1
-            right_distance_d = right_distance_t0 - right_distance_t1
+            left_distance_d = left_distance_t1 - left_distance_t0
+            right_distance_d = right_distance_t1 - right_distance_t0
             average_distance_d = (left_distance_d + right_distance_d) / 2
         
             left_rotation = left_distance_d / (2 * self.l)
@@ -151,9 +151,9 @@ class OdometryNode(DTROS):
             total_rotation = right_rotation - left_rotation
             
             # calculate position with respect to world frame
-            self.theta_world += total_rotation
             self.y_world += np.sin(self.theta_world) * average_distance_d
             self.x_world += np.cos(self.theta_world) * average_distance_d
+            self.theta_world += total_rotation
             
             # write final position to ros bag
             now = rospy.get_rostime()
@@ -181,5 +181,3 @@ if __name__ == '__main__':
     node = OdometryNode(node_name='odometry_node')
     # Run the node
     node.run()
-    # Keep it spinning to keep the node alive
-    rospy.spin()

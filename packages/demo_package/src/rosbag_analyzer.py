@@ -18,7 +18,6 @@ first_timestamp = None
 rel_timestamps = []
 
 for topic, msg, t in bag.read_messages(topics=['timestamp', 'x', 'y', 'theta']):
-    print("Read message: topic=" + str(topic) + " msg=" + str(msg) + " t=" + str(t))
     
     if topic == "timestamp":
         timestamps.append(msg.data)
@@ -50,6 +49,7 @@ plt.ylabel("X (metres)")
 
 plt.plot(xpoints, ypoints)
 plt.savefig("/data/logs/xworld_vs_time.png")
+plt.clf()
 
 # Plot the y values with respect to time
 xpoints = np.array(timestamps)
@@ -63,6 +63,7 @@ plt.ylabel("Y (metres)")
 
 plt.plot(xpoints, ypoints)
 plt.savefig("/data/logs/yworld_vs_time.png")
+plt.clf()
 
 # Plot the theta values with respect to time
 xpoints = np.array(timestamps)
@@ -76,6 +77,7 @@ plt.ylabel("Theta (radians)")
 
 plt.plot(xpoints, ypoints)
 plt.savefig("/data/logs/thetaworld_vs_time.png")
+plt.clf()
 
 # Plot the x values with respect to y values
 xpoints = np.array(x_vals)
@@ -87,5 +89,6 @@ plt.ylabel("Y (metres)")
 
 plt.plot(xpoints, ypoints)
 plt.savefig("/data/logs/xworld_vs_yworld.png")
+plt.clf()
 
 
