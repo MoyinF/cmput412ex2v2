@@ -6,7 +6,7 @@ from duckietown.dtros import DTROS, NodeType, TopicType
 from std_msgs.msg import String, Header, Float32, ColorRGBA
 from duckietown_msgs.msg import LEDPattern, WheelsCmdStamped
 from duckietown_msgs.srv import SetCustomLEDPattern, ChangePattern
-import time
+# import time
 
 class ControllerNode(DTROS):
 
@@ -23,27 +23,18 @@ class ControllerNode(DTROS):
         self.pub_wheel_commands = rospy.Publisher(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=1)
 
         # Services
-        # rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
+        rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
-<<<<<<< HEAD
 
         # vehicle speeds
         self.x_speed = 0.3
         self.turn_speed = 0.45
-        self.slow_down = 0.13 # for slowing down turns during rotations
-        self.speed_up = 0.0525 # for speeding up the lagging wheel
+        self.slow_down = 0.14 # for slowing down turns during rotations
+        self.speed_up = 0.015 # for speeding up the lagging wheel
 
-        # old speeds
         # self.x_speed = 0.4
         # self.turn_speed = 0.15
 
-=======
-        
-        # vehicle speeds
-        self.x_speed = 0.25
-        self.turn_speed = 0.25
-        
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
         # wheel distances
         self.distance_left = 0
         self.distance_right = 0
@@ -51,90 +42,31 @@ class ControllerNode(DTROS):
         self.l = 0.05 # meters between the center of the wheel and the robot rotation
         self.r = 0.033	# radius of the wheel in meteres
 
-        # set shutdown behaviour
-        rospy.on_shutdown(self.stop)
 
 
     def run(self):
-<<<<<<< HEAD
-        # self.real_run()
-        self.test_state_4()
-
-    def real_run(self):
         self.state_1(5)
         self.state_2()
         self.state_1(5)
-        self.state_3()
-        self.state_1(5)
-        self.state_4()
+        #self.state_3()
+        #self.state_1(5)
+        #self.state_4()
         self.complete()
-
-    def test_state_4(self):
-        self.state_1(2)
-        self.publish_leds("WHITE")
-        self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
-        self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
-        self.state_1(7)
-        self.publish_leds("BLUE")
-        self.test_circular_motion(0.3, 0.5) # current normal radius, faster speed
-        self.test_circular_motion(0.3, 0.5) # current normal radius, faster speed
-        self.state_1(7)
-        self.publish_leds("GREEN")
-        self.test_circular_motion(0.3, 0.6) # current normal radius, faster speed
-        self.stop()
-        self.complete()
-
-    def test_state_2(self):
-        self.state_1(5)
-        self.slow_down = 0.13 # for slowing down turns during rotations
-        self.speed_up = 0.0525 # for speeding up the lagging wheel
-        self.publish_leds("GREEN")
-        self.first_right_turn(np.pi/2)
-        self.forward(1.25)
-        self.left_turn(np.pi/2)
-        self.forward(1.25)
-        self.left_turn(np.pi/2)
-        self.forward(1.25)
-
-        self.state_1(5)
-        self.slow_down = 0.13 # for slowing down turns during rotations
-        self.speed_up = 0.055 # for speeding up the lagging wheel
-        self.publish_leds("GREEN")
-        self.first_right_turn(np.pi/2)
-        self.forward(1.25)
-        self.left_turn(np.pi/2)
-        self.forward(1.25)
-        self.left_turn(np.pi/2)
-        self.forward(1.25)
-        self.complete()
+        return
 
     def complete(self):
-        seconds = 0.4
-        self.publish_leds("GREEN")
-        time.sleep(seconds)
-        self.publish_leds("BLUE")
-        time.sleep(seconds)
-        self.publish_leds("RED")
-        time.sleep(seconds)
         self.publish_leds("WHITE")
-        time.sleep(seconds)
-        self.publish_leds("GREEN")
-        time.sleep(seconds)
-        self.publish_leds("BLUE")
-        time.sleep(seconds)
-        self.publish_leds("RED")
-        time.sleep(seconds)
-        self.publish_leds("WHITE")
-        time.sleep(seconds)
 
     def state_1(self, seconds):
         # change LEDs and wait for 5 seconds
         self.publish_leds("RED")
-        time.sleep(seconds)
+
+        # wait for 5 seconds
+        # time.sleep(seconds)
 
     def state_2(self):
-        # change LEDs, move 90 degrees and forward 3 times
-        self.publish_leds("GREEN")
+        self.publish_leds("BLUE")
+        # move 90 degrees and forward 3 times
         self.first_right_turn(np.pi/2)
         self.forward(1.25)
         self.left_turn(np.pi/2)
@@ -143,27 +75,16 @@ class ControllerNode(DTROS):
         self.forward(1.25)
 
     def state_3(self):
-        # change LEDs and return to initial position
-        self.publish_leds("BLUE")
+        self.publish_leds("GREEN")
+        # return to initial position
         self.right_turn(np.pi/2)
         self.backward(1.25)
         self.stop()
 
     def state_4(self):
-        # change LEDs and move in circular motion
-=======
-        rospy.loginfo("Duckiebot driving forward")
-        self.forward(1.0)
-        rospy.loginfo("Duckiebot turning right")
-        self.right_turn(np.pi/2)
-        rospy.loginfo("Duckiebot driving backwards")
-        self.backward(1.0)
-        
-    def complete(self):
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
         self.publish_leds("WHITE")
-        self.forward(0.625) # move a bit forward
-        self.circular_motion(0.55)
+        # change LEDs and move in circular motion
+        self.circular_motion()
 
 
     def forward(self, total_distance):
@@ -173,21 +94,12 @@ class ControllerNode(DTROS):
         msg = WheelsCmdStamped()
         msg.header.stamp = rospy.get_rostime()
         msg.vel_left = self.x_speed
-<<<<<<< HEAD
         msg.vel_right = self.x_speed + self.speed_up # csc22906
 
         while current_distance - starting_distance < total_distance:
             current_distance = (self.distance_left + self.distance_right) / 2
             self.pub_wheel_commands.publish(msg)
 
-=======
-        msg.vel_right = self.x_speed
-        
-        while current_distance - starting_distance < total_distance:
-            current_distance = (self.distance_left + self.distance_right) / 2
-            self.pub_wheel_commands.publish(msg)
-            
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
         self.stop()
 
 
@@ -199,7 +111,6 @@ class ControllerNode(DTROS):
         msg.header.stamp = rospy.get_rostime()
         msg.vel_left = -self.x_speed
         msg.vel_right = -self.x_speed
-<<<<<<< HEAD
 
         rospy.loginfo("left:" + str(msg.vel_left) + " right: " + str(msg.vel_right))
 
@@ -211,7 +122,7 @@ class ControllerNode(DTROS):
 
     def rot_dist(self, angle):
         # angle is in radians
-        # r * theta is formula for arc length
+        # r*theta is formula for arc length
         return angle * self.l
 
     def left_turn(self, angle):
@@ -274,106 +185,27 @@ class ControllerNode(DTROS):
 
     def circular_motion(self, rad):
         # for clockwise motion
-        msg = WheelsCmdStamped()
-        msg.header.stamp = rospy.get_rostime()
-
-        # rad is center of rotation to center of duckiebot,
-        # so need big & small radii for each wheel
+        ########### right now just a filler function
+        ######## something off with the calculations: if moving x meters, the speed is different if it were moving straight
+        ########### vs if it were moving x meters in a circle, right?
+        ######### and when do we use self.r?
+        # rad is to center of duckiebot, so need big & small radii
         big_distance = 2 * np.pi * (rad + self.l)
         small_distance = 2 * np.pi * (rad - self.l)
 
-        t = 10 # seconds to complete
+        t = 30 # seconds to complete
 
         starting_distance_l = self.distance_left
         starting_distance_r = self.distance_right
 
-        outer_vel = big_distance/t
-        inner_vel = small_distance/t
-
         # clockwise motion: left wheel is the outer wheel, so it needs to have the bigger distance
-        msg.vel_left = outer_vel
-        msg.vel_right = inner_vel
+        msg.vel_left = big_distance/t
+        msg.vel_right = small_distance/t
 
         while (self.distance_left - starting_distance_l < big_distance) and (self.distance_right - starting_distance_r < small_distance):
             rospy.loginfo("circular motion")
             self.pub_wheel_commands.publish(msg)
-=======
-        
-        while starting_distance - current_distance < total_distance:
-            current_distance = (self.distance_left + self.distance_right) / 2
-            self.pub_wheel_commands.publish(msg)
-            
-        self.stop()
-     
-    def rot_dist(self, angle):
-        # Returns the distance that a wheel must travel in order for the duckiebot
-        # to turn in place by a set amount of radians
-        return angle * self.l
-     
-    def left_turn(self, total_distance):
-        total_distance = self.rot_dist(angle)
-        
-        starting_distance_l = self.distance_left
-        starting_distance_r = self.distance_right
-        current_distance = 0
-        
-        msg = WheelsCmdStamped()
-        msg.header.stamp = rospy.get_rostime()
-        
-        msg.vel_left = -self.turn_speed
-        msg.vel_right = self.turn_speed
-        
-        while current_distance < total_distance:
-            current_distance = (abs(starting_distance_l - self.distance_left) + abs(starting_distance_r - self.distance_right))/2
-            self.pub_wheel_commands.publish(msg)
-            
-        self.stop()
-        
-    def right_turn(self, angle):
-        total_distance = self.rot_dist(angle)
-        
-        starting_distance_l = self.distance_left
-        starting_distance_r = self.distance_right
-        current_distance = 0
-        
-        msg = WheelsCmdStamped()
-        msg.header.stamp = rospy.get_rostime()
-        
-        msg.vel_left = self.turn_speed
-        msg.vel_right = -self.turn_speed
-        
-        while current_distance < total_distance:
-            current_distance = (abs(starting_distance_l - self.distance_left) + abs(starting_distance_r - self.distance_right))/2
-            self.pub_wheel_commands.publish(msg)
-        
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
-        self.stop()
 
-    def test_circular_motion(self, rad, speed):
-        # for clockwise motion
-        msg = WheelsCmdStamped()
-        msg.header.stamp = rospy.get_rostime()
-
-        # rad is center of rotation to center of duckiebot,
-        # so need big & small radii for each wheel
-        big_distance = 2 * np.pi * (rad + self.l)
-        small_distance = 2 * np.pi * (rad - self.l)
-
-        vel_ratio = (rad + self.l) / (rad - self.l)
-
-        starting_distance_l = self.distance_left
-        starting_distance_r = self.distance_right
-
-        outer_vel = speed * vel_ratio
-        inner_vel = speed
-
-        # clockwise motion: left wheel is the outer wheel, so it needs to have the bigger distance
-        msg.vel_left = outer_vel
-        msg.vel_right = inner_vel
-
-        while (self.distance_left - starting_distance_l < big_distance) and (self.distance_right - starting_distance_r < small_distance):
-            rospy.loginfo("circular motion")
-            self.pub_wheel_commands.publish(msg)
         self.stop()
 
 
@@ -394,26 +226,16 @@ class ControllerNode(DTROS):
 
     def cb_distance_left(self, msg):
         self.distance_left = msg.data
-<<<<<<< HEAD
 
-=======
-        rospy.loginfo("Distance left: " + str(msg.data))
-        
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
     def cb_distance_right(self, msg):
         self.distance_right = msg.data
-        rospy.loginfo("Distance right: " + str(msg.data))
 
 if __name__ == '__main__':
     # create the node
     node = ControllerNode(node_name='controller_node')
     # run node
     node.run()
-<<<<<<< HEAD
     # keep spinning
     # rospy.spin()
     reason = "Program over. Exiting."
     rospy.signal_shutdown(reason)
-=======
-
->>>>>>> 51a9d3a43969793fa8797d8517df910d6177995b
