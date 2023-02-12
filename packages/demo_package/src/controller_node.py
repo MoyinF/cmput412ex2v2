@@ -61,17 +61,10 @@ class ControllerNode(DTROS):
         self.complete()
 
     def test_state_4(self):
-        self.state_1(2)
+        self.state_1(7)
         self.publish_leds("WHITE")
         self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
         self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
-        self.state_1(7)
-        self.publish_leds("BLUE")
-        self.test_circular_motion(0.3, 0.5) # current normal radius, faster speed
-        self.test_circular_motion(0.3, 0.5) # current normal radius, faster speed
-        self.state_1(7)
-        self.publish_leds("GREEN")
-        self.test_circular_motion(0.3, 0.6) # current normal radius, faster speed
         self.stop()
         self.complete()
 
