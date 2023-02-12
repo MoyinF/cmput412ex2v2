@@ -4,6 +4,7 @@
 
     <node pkg="demo_package" type="odometry_node.py" name="odometry_node" output="screen" />
     <node pkg="demo_package" type="controller_node.py" name="controller_node" output="screen" />
+    <node pkg="demo_package" type="led_service_node.py" name="led_service_node" output="screen" />
 
    </group>
 

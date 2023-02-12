@@ -5,7 +5,7 @@ import rospy
 from duckietown.dtros import DTROS, NodeType, TopicType
 from std_msgs.msg import String, Header, Float32, ColorRGBA
 from duckietown_msgs.msg import LEDPattern, WheelsCmdStamped
-from duckietown_msgs.srv import SetCustomLEDPattern, ChangePattern
+from duckietown_msgs.srv import SetFSMState
 import time
 
 class ControllerNode(DTROS):
@@ -23,8 +23,8 @@ class ControllerNode(DTROS):
         self.pub_wheel_commands = rospy.Publisher(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=1)
 
         # Services
-        rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
-        self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
+        rospy.wait_for_service(f'/{self.veh_name}/led_service_node/led_service')
+        self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_service_node/led_service', SetFSMState)
 
         # vehicle speeds
         self.x_speed = 0.3
