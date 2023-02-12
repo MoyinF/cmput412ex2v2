@@ -28,7 +28,7 @@ class ControllerNode(DTROS):
 
         # vehicle speeds
         self.x_speed = 0.3
-        self.turn_speed = 0.45
+        self.turn_speed = 0.5
         
         # wheel calibration constants for csc22906
         self.slow_down = 0.13 # for slowing down turns during rotations
@@ -82,7 +82,7 @@ class ControllerNode(DTROS):
     def state_4(self):
         # change LEDs and move in circular motion
         self.publish_leds("WHITE")
-        self.forward(0.625) # move a bit forward
+        self.forward(0.625) # move forward to be tangential to the circle
         self.circular_motion(0.3, 0.4)
         self.circular_motion(0.3, 0.4)
         
@@ -277,8 +277,8 @@ class ControllerNode(DTROS):
     def test_state_4(self):
         self.state_1(7)
         self.publish_leds("WHITE")
-        self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
-        self.test_circular_motion(0.3, 0.4) # small radius, current normal speed
+        self.circular_motion(0.3, 0.4) # small radius, current normal speed
+        self.circular_motion(0.3, 0.4) # small radius, current normal speed
         self.stop()
         self.complete()
         
