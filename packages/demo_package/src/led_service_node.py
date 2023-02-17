@@ -10,7 +10,7 @@ class LEDServiceNode(DTROS):
     self.veh_name = rospy.get_namespace().strip("/")
     
     # Services proxies
-    rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
+    # rospy.wait_for_service(f'/{self.veh_name}/led_emitter_node/set_pattern')
     self.set_pattern = rospy.ServiceProxy(f'/{self.veh_name}/led_emitter_node/set_pattern', ChangePattern)
     
     # Services

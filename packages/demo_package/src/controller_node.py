@@ -23,15 +23,13 @@ class ControllerNode(DTROS):
         self.pub_wheel_commands = rospy.Publisher(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=1)
 
         # Service proxies
-        rospy.wait_for_service(f'/{self.veh_name}/led_service_node/led_service')
+        # rospy.wait_for_service(f'/{self.veh_name}/led_service_node/led_service')
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_service_node/led_service', ChangePattern)
 
         # vehicle speeds
         self.x_speed = 0.3
-        self.turn_speed = 0.45
+        self.turn_speed = 0.55
         self.circular_speed = 0.4
-        self.slow_down = 0.15 # for slowing down fast wheel during rotations
-        self.speed_up = 0.04 # for speeding up the lagging wheel during straight lines
 
         # wheel distances
         self.distance_left = 0
@@ -51,25 +49,6 @@ class ControllerNode(DTROS):
         self.state_3()
         self.state_1(5)
         self.state_4()
-        self.complete()
-
-    def complete(self):
-        seconds = 0.4
-        self.publish_leds("GREEN")
-        time.sleep(seconds)
-        self.publish_leds("BLUE")
-        time.sleep(seconds)
-        self.publish_leds("RED")
-        time.sleep(seconds)
-        self.publish_leds("WHITE")
-        time.sleep(seconds)
-        self.publish_leds("GREEN")
-        time.sleep(seconds)
-        self.publish_leds("BLUE")
-        time.sleep(seconds)
-        self.publish_leds("RED")
-        time.sleep(seconds)
-        self.publish_leds("WHITE")
 
     def state_1(self, seconds):
         # change LEDs and wait for 5 seconds
@@ -80,25 +59,25 @@ class ControllerNode(DTROS):
         # change LEDs, move 90 degrees and forward 3 times
         self.publish_leds("GREEN")
         self.right_turn(np.pi/2)
-        self.forward(1.15)
+        self.forward(1.25)
         self.left_turn(np.pi/2)
-        self.forward(1.15)
+        self.forward(1.25)
         self.left_turn(np.pi/2)
-        self.forward(1.15)
+        self.forward(1.25)
         
 
     def state_3(self):
         # change LEDs and return to initial position
         self.publish_leds("BLUE")
         self.right_turn(np.pi/2)
-        self.backward(1.15)
+        self.backward(1.25)
         self.stop()
 
     def state_4(self):
         # change LEDs and move in circular motion
         self.publish_leds("WHITE")
         self.forward(0.3) # move a bit forward
-        self.circular_motion(0.35)
+        self.circular_motion(0.6)
 
     def forward(self, total_distance):
         starting_distance = (self.distance_left + self.distance_right) / 2
@@ -106,7 +85,7 @@ class ControllerNode(DTROS):
 
         msg = WheelsCmdStamped()
         msg.vel_left = self.x_speed
-        msg.vel_right = self.x_speed + self.speed_up # csc22906
+        msg.vel_right = self.x_speed
 
         while current_distance - starting_distance < total_distance:
             current_distance = (self.distance_left + self.distance_right) / 2
@@ -121,7 +100,7 @@ class ControllerNode(DTROS):
 
         msg = WheelsCmdStamped()
         msg.vel_left = -self.x_speed
-        msg.vel_right = -self.x_speed - self.speed_up # csc22906
+        msg.vel_right = -self.x_speed
 
         rospy.loginfo("left:" + str(msg.vel_left) + " right: " + str(msg.vel_right))
 
@@ -146,7 +125,7 @@ class ControllerNode(DTROS):
 
         msg = WheelsCmdStamped()
         msg.vel_left = -self.turn_speed
-        msg.vel_right = self.turn_speed + self.slow_down # csc22906
+        msg.vel_right = self.turn_speed
 
         while current_distance < total_distance:
             rospy.loginfo("left_turn current_distance " + str(current_distance))
@@ -163,7 +142,7 @@ class ControllerNode(DTROS):
 
         msg = WheelsCmdStamped()
         msg.vel_left = self.turn_speed
-        msg.vel_right = -self.turn_speed + self.slow_down # csc22906
+        msg.vel_right = -self.turn_speed
 
         while current_distance < total_distance:
             rospy.loginfo("right_turn current_distance " + str(current_distance))
@@ -186,7 +165,7 @@ class ControllerNode(DTROS):
         vel_ratio = big_distance / small_distance
 
         # clockwise motion: left wheel is the outer wheel, so it needs to have the bigger distance
-        msg.vel_left = self.circular_speed * vel_ratio
+        msg.vel_left = self.circulat_speed * vel_ratio
         msg.vel_right = self.circular_speed
         
         while (self.distance_left - starting_distance_l < big_distance) or (self.distance_right - starting_distance_r < small_distance):
@@ -200,7 +179,10 @@ class ControllerNode(DTROS):
         self.pub_wheel_commands.publish(msg)
 
     def publish_leds(self, color):
-        self.led_service(String(color))
+        try:
+            self.led_service(String(color))
+        except:
+            rospy.loginfo("Failed to publish LEDs")
 
     def cb_distance_left(self, msg):
         self.distance_left = msg.data
