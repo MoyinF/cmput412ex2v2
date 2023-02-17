@@ -22,7 +22,7 @@ class ControllerNode(DTROS):
         # Publishers
         self.pub_wheel_commands = rospy.Publisher(f'/{self.veh_name}/wheels_driver_node/wheels_cmd', WheelsCmdStamped, queue_size=1)
 
-        # Service Proxy
+        # Services
         rospy.wait_for_service(f'/{self.veh_name}/led_service_node/led_service')
         self.led_service = rospy.ServiceProxy(f'/{self.veh_name}/led_service_node/led_service', ChangePattern)
 
@@ -105,7 +105,6 @@ class ControllerNode(DTROS):
         time.sleep(seconds)
         self.publish_leds("WHITE")
         time.sleep(seconds)
-
 
     def forward(self, total_distance):
         starting_distance = (self.distance_left + self.distance_right) / 2
@@ -202,7 +201,6 @@ class ControllerNode(DTROS):
             self.pub_wheel_commands.publish(msg)
         self.stop()
 
-
     def circular_motion(self, rad, speed):
         # for clockwise motion
         msg = WheelsCmdStamped()
@@ -226,11 +224,7 @@ class ControllerNode(DTROS):
         msg.vel_left = outer_vel
         msg.vel_right = inner_vel
 
-        rospy.loginfo("big distance: " + str(big_distance) + " small distance: " + str(small_distance))
-
-
         while (self.distance_left - starting_distance_l < big_distance) or (self.distance_right - starting_distance_r < small_distance):
-            rospy.loginfo("left wheel: " + str(self.distance_left - starting_distance_l) + " right wheel: " + str(self.distance_right - starting_distance_r))
             self.pub_wheel_commands.publish(msg)
         self.stop()
 
@@ -253,6 +247,42 @@ class ControllerNode(DTROS):
 
     def cb_distance_right(self, msg):
         self.distance_right = msg.data
+
+    def test_state_2(self):
+        # old speeds
+        # self.x_speed = 0.4
+        # self.turn_speed = 0.15
+        self.state_1(5)
+        self.slow_down = 0.13 # for slowing down turns during rotations
+        self.speed_up = 0.0525 # for speeding up the lagging wheel
+        self.publish_leds("GREEN")
+        self.first_right_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+
+        self.state_1(5)
+        self.slow_down = 0.13 # for slowing down turns during rotations
+        self.speed_up = 0.055 # for speeding up the lagging wheel
+        self.publish_leds("GREEN")
+        self.first_right_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.left_turn(np.pi/2)
+        self.forward(1.25)
+        self.complete()
+
+    def test_state_4(self):
+        self.state_1(7)
+        self.publish_leds("WHITE")
+        self.circular_motion(0.3, 0.4) # small radius, current normal speed
+        self.circular_motion(0.3, 0.4) # small radius, current normal speed
+        self.stop()
+        self.complete()
+
 
     def test_state_4(self):
         self.state_1(10)
